@@ -1,0 +1,32 @@
+name: 'git-changesets'
+description: 'Github Action to determine changed files (aka changesets)'
+author: 'Collin Miller'
+runs:
+    using: node15
+    main: dist/index.js
+inputs:
+    token:
+        description: >
+            The Github token for making API calls.
+            It shouldn't need to be set by the end users.
+        required: true
+        default: ${{ github.token }}
+    format:
+        description: >
+            Format of the steps output context.
+            Can be 'space-delimited', 'csv', or 'json'.
+        required: true
+        default: csv
+outputs:
+    all:
+        description: All changed files.
+    added:
+        description: Added files.
+    modified:
+        description: Modified files.
+    removed:
+        description: Removed files.
+    renamed:
+        description: Renamed files.
+    added_modified:
+        description: Added and modified files.
