@@ -1,4 +1,4 @@
-name: Build and Test
+name: 'Build and Test'
 
 on:
     workflow_dispatch:
@@ -17,22 +17,22 @@ jobs:
                   yarn
             - run: |
                   npm build && yarn package
-  test:
-    name: Test git-changesets
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+    test:
+        name: Test git-changesets
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
 
-      - id: files
-        name: Run the action
-        uses: ./
+            - id: files
+              name: Run the action
+              uses: ./
 
-      - name: Print steps context output
-        run: |
-          echo 'steps.files.outputs.all=${{ steps.files.outputs.all }}'
-          echo 'steps.files.outputs.added=${{ steps.files.outputs.added }}'
-          echo 'steps.files.outputs.modified=${{ steps.files.outputs.modified }}'
-          echo 'steps.files.outputs.removed=${{ steps.files.outputs.removed }}'
-          echo 'steps.files.outputs.renamed=${{ steps.files.outputs.renamed }}'
-          echo 'steps.files.outputs.added_modified=${{ steps.files.outputs.added_modified }}'
+            - name: Print steps context output
+              run: |
+                  echo 'steps.files.outputs.all=${{ steps.files.outputs.all }}'
+                  echo 'steps.files.outputs.added=${{ steps.files.outputs.added }}'
+                  echo 'steps.files.outputs.modified=${{ steps.files.outputs.modified }}'
+                  echo 'steps.files.outputs.removed=${{ steps.files.outputs.removed }}'
+                  echo 'steps.files.outputs.renamed=${{ steps.files.outputs.renamed }}'
+                  echo 'steps.files.outputs.added_modified=${{ steps.files.outputs.added_modified }}'
