@@ -4,13 +4,11 @@
     "description": "Github Action to determine changed files (aka changesets)",
     "main": "lib/main.js",
     "scripts": {
-        "start:dev": "npx nodemon index.ts --watch **/*.ts --exec ts-node",
         "test": "npx concurrently npm:test:lint npm:test:unit",
         "test:unit": "npx jest",
         "test:lint": "npx eslint",
-        "build": "npx tsc",
-        "commit": "npx git-cz",
-        "package": "npx ncc build --source-map"
+        "build": "npx tsc && npx ncc build --source-map",
+        "commit": "npx git-cz"
     },
     "repository": {
         "type": "git",

@@ -16,7 +16,7 @@ jobs:
             - run: |
                   yarn
             - run: |
-                  npm build && yarn package
+                  yarn build
     test:
         name: Test git-changesets
         runs-on: ubuntu-latest

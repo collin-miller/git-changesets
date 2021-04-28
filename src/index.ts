@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import github, { context } from '@actions/github';
+import { context, getOctokit } from '@actions/github';
 
 enum OutputFormat {
     SpaceDelimited = 'space-delimited',
@@ -62,7 +62,7 @@ const run = async (): Promise<void> => {
         }) as OutputFormat;
 
         // Ensure that the format parameter is set properly.
-        if (Object.values(OutputFormat).includes(format)) {
+        if (!Object.values(OutputFormat).includes(format)) {
             core.setFailed(
                 `Output format must be one of must be one of ${Object.values(OutputFormat).join(
                     ', ',
@@ -72,7 +72,7 @@ const run = async (): Promise<void> => {
 
         // Debug log the payload.
         core.debug(`Payload keys: ${Object.keys(context.payload)}`);
-        const client = github.getOctokit(core.getInput('token', { required: true }));
+        const client = getOctokit(core.getInput('token', { required: true }));
 
         // Get event name.
         const eventName = context.eventName;
