@@ -1,63 +1,76 @@
 {
-  "name": "typescript-starter-kit",
-  "version": "1.0.0",
-  "description": "TypeScript project starter kit",
-  "main": "index.ts",
-  "scripts": {
-    "start:dev": "npx nodemon index.ts --watch **/*.ts --exec ts-node",
-    "test": "npx jest",
-    "build": "npx webpack",
-    "commit": "npx git-cz"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/unicorn-froyo/typescript-starter-kit.git"
-  },
-  "author": "unicorn-froyo",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/unicorn-froyo/typescript-starter-kit/issues"
-  },
-  "homepage": "https://github.com/unicorn-froyo/typescript-starter-kit#readme",
-  "devDependencies": {
-    "@commitlint/config-conventional": "^8.2.0",
-    "@types/jest": "^24.0.25",
-    "@types/node": "^13.1.2",
-    "commitizen": "^4.0.3",
-    "commitlint": "^8.2.0",
-    "husky": "^3.1.0",
-    "jest": "^24.9.0",
-    "nodemon": "^2.0.2",
-    "pretty-quick": "^2.0.1",
-    "ts-jest": "^24.2.0",
-    "ts-loader": "^6.2.1",
-    "ts-node": "^8.5.4",
-    "typescript": "^3.7.4",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^4.0.0-beta.1"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
+    "name": "git-changesets",
+    "version": "1.0.0",
+    "description": "Github Action to determine changed files (aka changesets)",
+    "main": "lib/main.js",
+    "scripts": {
+        "test": "npx concurrently npm:test:lint npm:test:unit",
+        "test:unit": "npx jest",
+        "test:lint": "npx eslint",
+        "build": "npx tsc && npx ncc build --source-map",
+        "commit": "npx git-cz"
     },
-    "collectCoverage": true,
-    "coverageThreshold": {
-      "global": {
-        "branches": 80,
-        "functions": 80,
-        "lines": 80
-      }
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/collin-miller/git-changesets.git"
+    },
+    "author": "unicorn-froyo",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/collin-miller/git-changesets/issues"
+    },
+    "homepage": "https://github.com/collin-miller/git-changesets#readme",
+    "devDependencies": {
+        "@commitlint/config-conventional": "^8.2.0",
+        "@types/jest": "^26.0.23",
+        "@types/node": "^13.1.2",
+        "@typescript-eslint/eslint-plugin": "^4.22.0",
+        "@typescript-eslint/parser": "^4.22.0",
+        "@zeit/ncc": "^0.22.3",
+        "commitizen": "^4.0.3",
+        "commitlint": "^8.2.0",
+        "eslint": "^7.25.0",
+        "eslint-config-airbnb-base": "^14.2.1",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-import": "^2.22.1",
+        "eslint-plugin-prettier": "^3.4.0",
+        "husky": "^3.1.0",
+        "jest": "^26.6.3",
+        "jest-cli": "^26.6.3",
+        "nodemon": "^2.0.2",
+        "prettier": "^2.2.1",
+        "pretty-quick": "^3.1.0",
+        "ts-jest": "^26.5.5",
+        "ts-loader": "^6.2.1",
+        "ts-node": "^8.5.4",
+        "typescript": "^3.7.4"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "npx pretty-quick --staged",
+            "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+        }
+    },
+    "config": {
+        "commitizen": {
+            "path": "./node_modules/cz-conventional-changelog"
+        }
+    },
+    "jest": {
+        "transform": {
+            "^.+\\.(ts|tsx)$": "ts-jest"
+        },
+        "collectCoverage": true,
+        "coverageThreshold": {
+            "global": {
+                "branches": 100,
+                "functions": 100,
+                "lines": 100
+            }
+        }
+    },
+    "dependencies": {
+        "@actions/core": "^1.2.7",
+        "@actions/github": "^4.0.0"
     }
-  }
 }
