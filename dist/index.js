@@ -4221,7 +4221,7 @@ module.exports = /******/ (function (modules, runtime) {
             };
             const run = () =>
                 __awaiter(void 0, void 0, void 0, function* () {
-                    var _a, _b, _c, _d;
+                    var _a, _b, _c, _d, _e, _f;
                     try {
                         // Create GitHub client with the API token.
                         const format = core.getInput('format', {
@@ -4259,7 +4259,16 @@ module.exports = /******/ (function (modules, runtime) {
                                     ? void 0
                                     : _d.sha;
                         } else if (eventName === 'push') {
-                            base = github_1.context.payload.before;
+                            // handle the first commit to a new branch
+                            base =
+                                github_1.context.payload.before !== '0000000000000000000000000000000000000000'
+                                    ? github_1.context.payload.before
+                                    : (_f =
+                                          (_e = github_1.context.payload.pull_request) === null || _e === void 0
+                                              ? void 0
+                                              : _e.base) === null || _f === void 0
+                                    ? void 0
+                                    : _f.ref;
                             head = github_1.context.payload.after;
                         } else {
                             base = '';

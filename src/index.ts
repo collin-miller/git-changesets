@@ -85,7 +85,11 @@ const run = async (): Promise<void> => {
             base = context.payload.pull_request?.base?.ref;
             head = context.payload.pull_request?.head?.sha;
         } else if (eventName === 'push') {
-            base = context.payload.before;
+            // handle the first commit to a new branch
+            base =
+                context.payload.before !== '0000000000000000000000000000000000000000'
+                    ? context.payload.before
+                    : context.payload.pull_request?.base?.ref;
             head = context.payload.after;
         } else {
             base = '';
