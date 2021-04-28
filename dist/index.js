@@ -4259,7 +4259,11 @@ module.exports = /******/ (function (modules, runtime) {
                                     ? void 0
                                     : _d.sha;
                         } else if (eventName === 'push') {
-                            base = github_1.context.payload.before;
+                            // handle the first commit to a new branch
+                            base =
+                                github_1.context.payload.before !== '0000000000000000000000000000000000000000'
+                                    ? github_1.context.payload.before
+                                    : github_1.context.payload.ref;
                             head = github_1.context.payload.after;
                         } else {
                             base = '';
