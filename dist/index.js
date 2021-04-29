@@ -317,6 +317,12 @@ module.exports = /******/ (function (modules, runtime) {
             /***/
         },
 
+        /***/ 129: /***/ function (module) {
+            module.exports = require('child_process');
+
+            /***/
+        },
+
         /***/ 141: /***/ function (__unusedmodule, exports, __webpack_require__) {
             'use strict';
 
@@ -4175,6 +4181,7 @@ module.exports = /******/ (function (modules, runtime) {
             Object.defineProperty(exports, '__esModule', { value: true });
             const core = __importStar(__webpack_require__(470));
             const github_1 = __webpack_require__(469);
+            const child_process_1 = __webpack_require__(129);
             var OutputFormat;
             (function (OutputFormat) {
                 OutputFormat['SpaceDelimited'] = 'space-delimited';
@@ -4219,6 +4226,41 @@ module.exports = /******/ (function (modules, runtime) {
                 core.setOutput('renamed', renamedFormatted);
                 core.setOutput('added_modified', addedModifiedFormatted);
             };
+            const parseCommit = (commitSha) =>
+                __awaiter(void 0, void 0, void 0, function* () {
+                    let GitFileStatus;
+                    (function (GitFileStatus) {
+                        GitFileStatus['Added'] = 'A';
+                        GitFileStatus['Modified'] = 'M';
+                        GitFileStatus['Deleted'] = 'D';
+                    })(GitFileStatus || (GitFileStatus = {}));
+                    let files = [];
+                    try {
+                        const result = yield child_process_1
+                            .execSync(`git show --pretty="" --name-status ${commitSha}`)
+                            .toString('utf-8');
+                        result.split('\n').forEach((element) => {
+                            let fileStatus;
+                            let fileName;
+                            [fileStatus, fileName] = element.split('\t');
+                            if (fileStatus && fileName) {
+                                let data = {};
+                                data.filename = fileName;
+                                if (fileStatus === GitFileStatus.Added) {
+                                    data.status = FileStatus.Added;
+                                } else if (fileStatus === FileStatus.Modified) {
+                                    data.status = GitFileStatus.Modified;
+                                } else if (fileStatus === GitFileStatus.Deleted) {
+                                    data.status = FileStatus.Removed;
+                                }
+                                files.push(data);
+                            }
+                        });
+                    } catch (err) {
+                        core.setFailed(`Exception raised while parsing commit ${commitSha}, message ${err.message}`);
+                    }
+                    return { status: 200, data: { files } };
+                });
             const run = () =>
                 __awaiter(void 0, void 0, void 0, function* () {
                     var _a, _b, _c, _d;
@@ -4271,33 +4313,34 @@ module.exports = /******/ (function (modules, runtime) {
                         // Log the commits
                         core.info(`Base commit: ${base}`);
                         core.info(`Head commit: ${head}`);
+                        let response;
                         // Ensure that the base and head properties are set on the payload.
                         if (!base || !head) {
                             core.setFailed(
                                 `The base and head commits are missing from the payload for this ${github_1.context.eventName} event.`,
                             );
+                        } else if (github_1.context.payload.before === '0000000000000000000000000000000000000000') {
+                            response = yield parseCommit(github_1.context.payload.after);
+                        } else {
+                            // https://developer.github.com/v3/repos/commits/#compare-two-commits
+                            response = yield client.repos.compareCommits({
+                                base,
+                                head,
+                                owner: github_1.context.repo.owner,
+                                repo: github_1.context.repo.repo,
+                            });
                         }
-                        // https://developer.github.com/v3/repos/commits/#compare-two-commits
-                        const response = yield client.repos.compareCommits({
-                            base,
-                            head,
-                            owner: github_1.context.repo.owner,
-                            repo: github_1.context.repo.repo,
-                        });
                         // Ensure that the request was successful.
-                        if (response.status !== 200) {
+                        if ((response === null || response === void 0 ? void 0 : response.status) !== 200) {
                             core.setFailed(
-                                `The GitHub API for comparing the base and head commits for this ${github_1.context.eventName} event returned ${response.status}, expected 200.`,
+                                `The GitHub API for comparing the base and head commits for this ${
+                                    github_1.context.eventName
+                                } event returned ${
+                                    response === null || response === void 0 ? void 0 : response.status
+                                }, expected 200.`,
                             );
                         }
-                        // Ensure that the head commit is ahead of the base commit.
-                        if (response.data.status !== 'ahead') {
-                            core.setFailed(
-                                `The head commit for this ${github_1.context.eventName} event is not ahead of the base commit. ` +
-                                    "Please submit an issue on this action's GitHub repo.",
-                            );
-                        }
-                        const files = response.data.files;
+                        const files = response === null || response === void 0 ? void 0 : response.data.files;
                         const added = [];
                         const modified = [];
                         const removed = [];
