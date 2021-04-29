@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
+import { exec } from 'child_process';
 
 enum OutputFormat {
     SpaceDelimited = 'space-delimited',
@@ -12,6 +13,15 @@ enum FileStatus {
     Modified = 'modified',
     Removed = 'removed',
     Renamed = 'renamed',
+}
+
+interface IGithubResponseFiles {
+    status: string;
+    filename: string;
+}
+interface IGithubResponse {
+    status: number;
+    data: { status: string; files: IGithubResponseFiles[] };
 }
 
 const setFormat = (elements: string[], outputFormat: OutputFormat) => {
@@ -52,6 +62,41 @@ const setOutput = (
     core.setOutput('removed', removedFormatted);
     core.setOutput('renamed', renamedFormatted);
     core.setOutput('added_modified', addedModifiedFormatted);
+};
+
+const parseCommit = async (commitSha: string): Promise<IGithubResponse> => {
+    enum GitFileStatus {
+        Added = 'A',
+        Modified = 'M',
+        Deleted = 'D',
+    }
+    let files: IGithubResponseFiles[] = [];
+
+    exec(`git show --pretty="" --name-status ${commitSha}`, (err, stdout, stderr) => {
+        if (err !== null) {
+            core.setFailed(`Exception raised while parsing commit ${commitSha}, message ${err.message}`);
+        } else if (stderr !== undefined) {
+            core.setFailed(`Error occurred while parsing commit ${commitSha}, message ${stderr}`);
+        }
+        stdout.split('\n').forEach((element) => {
+            let fileStatus: string;
+            let fileName: string;
+            [fileStatus, fileName] = element.split('\t');
+            if (fileStatus && fileName) {
+                let data = {} as IGithubResponseFiles;
+                data.filename = fileName;
+                if (fileStatus === GitFileStatus.Added) {
+                    data.status = FileStatus.Added;
+                } else if (fileStatus === FileStatus.Modified) {
+                    data.status = GitFileStatus.Modified;
+                } else if (fileStatus === GitFileStatus.Deleted) {
+                    data.status = FileStatus.Removed;
+                }
+                files.push(data as IGithubResponseFiles);
+            }
+        });
+    });
+    return { status: 200, data: { files } } as IGithubResponse;
 };
 
 const run = async (): Promise<void> => {
@@ -98,37 +143,39 @@ const run = async (): Promise<void> => {
         // Log the commits
         core.info(`Base commit: ${base}`);
         core.info(`Head commit: ${head}`);
-
+        let response;
         // Ensure that the base and head properties are set on the payload.
         if (!base || !head) {
             core.setFailed(
                 `The base and head commits are missing from the payload for this ${context.eventName} event.`,
             );
+        } else if (context.payload.before === '0000000000000000000000000000000000000000') {
+            response = await parseCommit(context.payload.after);
+        } else {
+            // https://developer.github.com/v3/repos/commits/#compare-two-commits
+            response = await client.repos.compareCommits({
+                base,
+                head,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+            });
         }
 
-        // https://developer.github.com/v3/repos/commits/#compare-two-commits
-        const response = await client.repos.compareCommits({
-            base,
-            head,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-        });
-
         // Ensure that the request was successful.
-        if (response.status !== 200) {
+        if (response?.status !== 200) {
             core.setFailed(
-                `The GitHub API for comparing the base and head commits for this ${context.eventName} event returned ${response.status}, expected 200.`,
+                `The GitHub API for comparing the base and head commits for this ${context.eventName} event returned ${response?.status}, expected 200.`,
             );
         }
 
         // Ensure that the head commit is ahead of the base commit.
-        if (response.data.status !== 'ahead') {
+        if (response?.data.status !== 'ahead') {
             core.setFailed(
                 `The head commit for this ${context.eventName} event is not ahead of the base commit. ` +
                     "Please submit an issue on this action's GitHub repo.",
             );
         }
-        const files = response.data.files;
+        const files = response?.data.files;
 
         const added = [] as string[];
         const modified = [] as string[];
