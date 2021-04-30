@@ -44,7 +44,7 @@ const setOutput = (
     const allFormatted = setFormat([...added, ...modified, ...removed, ...renamed], outputFormat);
     const addedFormatted = setFormat(added, outputFormat);
     const modifiedFormatted = setFormat(modified, outputFormat);
-    const removedFormatted = setFormat(modified, outputFormat);
+    const removedFormatted = setFormat(removed, outputFormat);
     const renamedFormatted = setFormat(renamed, outputFormat);
     const addedModifiedFormatted = setFormat([...added, ...modified], outputFormat);
     // Log the output values.
@@ -83,8 +83,8 @@ const parseCommit = async (commitSha: string): Promise<IGithubResponse> => {
                 data.filename = fileName;
                 if (fileStatus === GitFileStatus.Added) {
                     data.status = FileStatus.Added;
-                } else if (fileStatus === FileStatus.Modified) {
-                    data.status = GitFileStatus.Modified;
+                } else if (fileStatus === GitFileStatus.Modified) {
+                    data.status = FileStatus.Modified;
                 } else if (fileStatus === GitFileStatus.Deleted) {
                     data.status = FileStatus.Removed;
                 }
