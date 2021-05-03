@@ -146,8 +146,8 @@ const run = async (): Promise<void> => {
             core.setFailed(
                 `The base and head commits are missing from the payload for this ${context.eventName} event.`,
             );
-        } else if (context.payload.before === '0000000000000000000000000000000000000000') {
-            response = await parseCommit(context.payload.after);
+        } else if (base === '0000000000000000000000000000000000000000') {
+            response = await parseCommit(head);
         } else {
             // https://developer.github.com/v3/repos/commits/#compare-two-commits
             response = await client.repos.compareCommits({
