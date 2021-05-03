@@ -27,11 +27,11 @@ interface IGithubResponse {
 const setFormat = (elements: string[], outputFormat: OutputFormat) => {
     if (outputFormat === OutputFormat.SpaceDelimited) {
         return elements.join(' ');
-    } else if (outputFormat === OutputFormat.Csv) {
-        return elements.join(',');
-    } else {
-        return JSON.stringify(elements);
     }
+    if (outputFormat === OutputFormat.Csv) {
+        return elements.join(',');
+    }
+    return JSON.stringify(elements);
 };
 
 const setOutput = (
@@ -70,16 +70,15 @@ const parseCommit = async (commitSha: string): Promise<IGithubResponse> => {
         Modified = 'M',
         Deleted = 'D',
     }
-    let files: IGithubResponseFiles[] = [];
+    const files: IGithubResponseFiles[] = [];
 
     try {
         const result = await execSync(`git show --pretty="" --name-status ${commitSha}`).toString('utf-8');
-        result.split('\n').forEach((element) => {
-            let fileStatus: string;
-            let fileName: string;
-            [fileStatus, fileName] = element.split('\t');
+        result.split('\n').forEach((element: string) => {
+            const fileStatus: string = element.split('\t')[0];
+            const fileName: string = element.split('\t')[1];
             if (fileStatus && fileName) {
-                let data = {} as IGithubResponseFiles;
+                const data = {} as IGithubResponseFiles;
                 data.filename = fileName;
                 if (fileStatus === GitFileStatus.Added) {
                     data.status = FileStatus.Added;
@@ -118,7 +117,7 @@ const run = async (): Promise<void> => {
         const client = getOctokit(core.getInput('token', { required: true }));
 
         // Get event name.
-        const eventName = context.eventName;
+        const { eventName } = context;
 
         // Define the base and head commits to be extracted from the payload.
         let base: string;
@@ -175,7 +174,7 @@ const run = async (): Promise<void> => {
         files?.forEach((element) => {
             if (element.status === FileStatus.Added) {
                 added.push(element.filename);
-            } else if (element.status == FileStatus.Modified) {
+            } else if (element.status === FileStatus.Modified) {
                 modified.push(element.filename);
             } else if (element.status === FileStatus.Removed) {
                 removed.push(element.filename);
