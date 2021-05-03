@@ -3886,8 +3886,8 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         if (!base || !head) {
             core.setFailed(`The base and head commits are missing from the payload for this ${github_1.context.eventName} event.`);
         }
-        else if (github_1.context.payload.before === '0000000000000000000000000000000000000000') {
-            response = yield parseCommit(github_1.context.payload.after);
+        else if (base === '0000000000000000000000000000000000000000') {
+            response = yield parseCommit(head);
         }
         else {
             // https://developer.github.com/v3/repos/commits/#compare-two-commits
