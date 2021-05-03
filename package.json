@@ -1,6 +1,6 @@
 {
     "name": "git-changesets",
-    "version": "1.0.0",
+    "version": "0.0.2",
     "description": "Github Action to determine changed files (aka changesets)",
     "main": "lib/main.js",
     "scripts": {
@@ -8,7 +8,8 @@
         "test:unit": "npx jest",
         "test:lint": "npx eslint src/**/*.ts",
         "build": "npx tsc && npx ncc build --source-map",
-        "commit": "npx git-cz"
+        "commit": "npx git-cz",
+        "lint:staged": "npx pretty-quick --staged"
     },
     "repository": {
         "type": "git",
@@ -51,7 +52,7 @@
     },
     "husky": {
         "hooks": {
-            "pre-commit": "npm test && npx pretty-quick --staged",
+            "pre-commit": "npx concurrently npm:test:unit npm:test:lint npm:lint:staged",
             "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
         }
     },
