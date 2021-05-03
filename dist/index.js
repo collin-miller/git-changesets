@@ -3785,12 +3785,10 @@ const setFormat = (elements, outputFormat) => {
     if (outputFormat === OutputFormat.SpaceDelimited) {
         return elements.join(' ');
     }
-    else if (outputFormat === OutputFormat.Csv) {
+    if (outputFormat === OutputFormat.Csv) {
         return elements.join(',');
     }
-    else {
-        return JSON.stringify(elements);
-    }
+    return JSON.stringify(elements);
 };
 const setOutput = (added, modified, removed, renamed, outputFormat) => {
     const allFormatted = setFormat([...added, ...modified, ...removed, ...renamed], outputFormat);
@@ -3821,15 +3819,14 @@ const parseCommit = (commitSha) => __awaiter(void 0, void 0, void 0, function* (
         GitFileStatus["Modified"] = "M";
         GitFileStatus["Deleted"] = "D";
     })(GitFileStatus || (GitFileStatus = {}));
-    let files = [];
+    const files = [];
     try {
         const result = yield child_process_1.execSync(`git show --pretty="" --name-status ${commitSha}`).toString('utf-8');
         result.split('\n').forEach((element) => {
-            let fileStatus;
-            let fileName;
-            [fileStatus, fileName] = element.split('\t');
+            const fileStatus = element.split('\t')[0];
+            const fileName = element.split('\t')[1];
             if (fileStatus && fileName) {
-                let data = {};
+                const data = {};
                 data.filename = fileName;
                 if (fileStatus === GitFileStatus.Added) {
                     data.status = FileStatus.Added;
@@ -3864,7 +3861,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         core.debug(`Payload keys: ${Object.keys(github_1.context.payload)}`);
         const client = github_1.getOctokit(core.getInput('token', { required: true }));
         // Get event name.
-        const eventName = github_1.context.eventName;
+        const { eventName } = github_1.context;
         // Define the base and head commits to be extracted from the payload.
         let base;
         let head;
@@ -3914,7 +3911,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             if (element.status === FileStatus.Added) {
                 added.push(element.filename);
             }
-            else if (element.status == FileStatus.Modified) {
+            else if (element.status === FileStatus.Modified) {
                 modified.push(element.filename);
             }
             else if (element.status === FileStatus.Removed) {

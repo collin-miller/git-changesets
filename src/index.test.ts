@@ -1,18 +1,16 @@
-import { describe, expect, it } from '@jest/globals';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as process from 'process';
-import * as path from 'path';
-import run from './index';
 import * as github from '@actions/github';
 import * as core from '@actions/core';
 import nock from 'nock';
 
 import cp from 'child_process';
+import run from './index';
 
-const originalGitHubWorkspace = process.env['GITHUB_WORKSPACE'];
-const gitHubWorkspace = path.resolve('/checkout-tests/workspace');
+const originalGitHubWorkspace = process.env.GITHUB_WORKSPACE;
 
 // Shallow clone original @actions/github context
-let originalContext = { ...github.context };
+const originalContext = { ...github.context };
 
 describe('git-changesets', () => {
     beforeAll(() => {
@@ -29,9 +27,9 @@ describe('git-changesets', () => {
     });
     afterAll(() => {
         // Restore GitHub workspace
-        delete process.env['GITHUB_WORKSPACE'];
+        delete process.env.GITHUB_WORKSPACE;
         if (originalGitHubWorkspace) {
-            process.env['GITHUB_WORKSPACE'] = originalGitHubWorkspace;
+            process.env.GITHUB_WORKSPACE = originalGitHubWorkspace;
         }
 
         // Restore @actions/github context
