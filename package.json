@@ -4,12 +4,12 @@
     "description": "Github Action to determine changed files (aka changesets)",
     "main": "lib/main.js",
     "scripts": {
-        "test": "npx concurrently npm:test:lint npm:test:unit",
-        "test:unit": "npx jest",
-        "test:lint": "npx eslint src/**/*.ts",
-        "build": "npx tsc && npx ncc build --source-map",
-        "commit": "npx git-cz",
-        "lint:staged": "npx pretty-quick --staged"
+        "test": "yarn concurrently npm:test:lint npm:test:unit",
+        "test:unit": "yarn jest",
+        "test:lint": "yarn eslint src/**/*.ts",
+        "build": "yarn tsc && yarn ncc build --source-map",
+        "commit": "yarn git-cz",
+        "lint:staged": "yarn pretty-quick --staged"
     },
     "repository": {
         "type": "git",
@@ -32,6 +32,7 @@
         "@zeit/ncc": "^0.22.3",
         "commitizen": "^4.0.3",
         "commitlint": "^8.2.0",
+        "concurrently": "^6.0.2",
         "eslint": "^7.25.0",
         "eslint-config-airbnb-base": "^14.2.1",
         "eslint-config-prettier": "^8.3.0",
@@ -52,7 +53,7 @@
     },
     "husky": {
         "hooks": {
-            "pre-commit": "npx concurrently npm:test:unit npm:test:lint npm:lint:staged",
+            "pre-commit": "yarn concurrently npm:test:unit npm:test:lint npm:lint:staged",
             "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
         }
     },
