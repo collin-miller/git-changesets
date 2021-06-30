@@ -3818,6 +3818,7 @@ const parseCommit = (commitSha) => __awaiter(void 0, void 0, void 0, function* (
         GitFileStatus["Added"] = "A";
         GitFileStatus["Modified"] = "M";
         GitFileStatus["Deleted"] = "D";
+        GitFileStatus["Renamed"] = "R";
     })(GitFileStatus || (GitFileStatus = {}));
     const files = [];
     try {
@@ -3836,6 +3837,9 @@ const parseCommit = (commitSha) => __awaiter(void 0, void 0, void 0, function* (
                 }
                 else if (fileStatus === GitFileStatus.Deleted) {
                     data.status = FileStatus.Removed;
+                }
+                else if (fileStatus.startsWith(GitFileStatus.Renamed)) {
+                    data.status = FileStatus.Renamed;
                 }
                 files.push(data);
             }
