@@ -244,7 +244,9 @@ describe('git-changesets', () => {
         it('should get the using the git cli', async () => {
             // Set Up
             github.context.payload.before = '0000000000000000000000000000000000000000';
-            jest.spyOn(cp, 'execSync').mockReturnValueOnce(Buffer.from('A\tfile1\nM\tfile2\nD\tfile3\nM\tfile4\n'));
+            jest.spyOn(cp, 'execSync').mockReturnValueOnce(
+                Buffer.from('A\tfile1\nM\tfile2\nD\tfile3\nM\tfile4\nR089\tfile5'),
+            );
 
             // Execute
             await run();
@@ -255,11 +257,11 @@ describe('git-changesets', () => {
                 'git show --pretty="" --name-status 456789012345678901234567890123456789012',
             );
 
-            expect(core.setOutput).toHaveBeenNthCalledWith(1, 'all', 'file1 file2 file4 file3');
+            expect(core.setOutput).toHaveBeenNthCalledWith(1, 'all', 'file1 file2 file4 file3 file5');
             expect(core.setOutput).toHaveBeenNthCalledWith(2, 'added', 'file1');
             expect(core.setOutput).toHaveBeenNthCalledWith(3, 'modified', 'file2 file4');
             expect(core.setOutput).toHaveBeenNthCalledWith(4, 'removed', 'file3');
-            expect(core.setOutput).toHaveBeenNthCalledWith(5, 'renamed', '');
+            expect(core.setOutput).toHaveBeenNthCalledWith(5, 'renamed', 'file5');
             expect(core.setOutput).toHaveBeenNthCalledWith(6, 'added_modified', 'file1 file2 file4');
         });
     });

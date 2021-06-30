@@ -69,6 +69,7 @@ const parseCommit = async (commitSha: string): Promise<IGithubResponse> => {
         Added = 'A',
         Modified = 'M',
         Deleted = 'D',
+        Renamed = 'R',
     }
     const files: IGithubResponseFiles[] = [];
 
@@ -86,6 +87,8 @@ const parseCommit = async (commitSha: string): Promise<IGithubResponse> => {
                     data.status = FileStatus.Modified;
                 } else if (fileStatus === GitFileStatus.Deleted) {
                     data.status = FileStatus.Removed;
+                } else if (fileStatus.startsWith(GitFileStatus.Renamed)) {
+                    data.status = FileStatus.Renamed;
                 }
                 files.push(data as IGithubResponseFiles);
             }

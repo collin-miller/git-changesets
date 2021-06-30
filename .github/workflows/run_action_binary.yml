@@ -2,9 +2,6 @@ name: 'Execute git-changesets built JavaScript'
 
 on:
     pull_request:
-    push:
-        branches:
-            - '!master'
 
 jobs:
     test:
