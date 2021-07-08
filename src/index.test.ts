@@ -254,7 +254,7 @@ describe('git-changesets', () => {
             expect(core.getInput).toHaveBeenCalledTimes(2);
             expect(core.error).toHaveBeenCalledTimes(0);
             expect(cp.execSync).toHaveBeenLastCalledWith(
-                'git show --pretty="" --name-status 456789012345678901234567890123456789012',
+                'git --no-pager diff HEAD~1 --name-status 456789012345678901234567890123456789012',
             );
 
             expect(core.setOutput).toHaveBeenNthCalledWith(1, 'all', 'file1 file2 file4 file3 file5');

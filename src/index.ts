@@ -74,7 +74,7 @@ const parseCommit = async (commitSha: string): Promise<IGithubResponse> => {
     const files: IGithubResponseFiles[] = [];
 
     try {
-        const result = await execSync(`git show --pretty="" --name-status ${commitSha}`).toString('utf-8');
+        const result = await execSync(`git --no-pager diff HEAD~1 --name-status ${commitSha}`).toString('utf-8');
         result.split('\n').forEach((element: string) => {
             const fileStatus: string = element.split('\t')[0];
             const fileName: string = element.split('\t')[1];

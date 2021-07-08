@@ -3822,7 +3822,7 @@ const parseCommit = (commitSha) => __awaiter(void 0, void 0, void 0, function* (
     })(GitFileStatus || (GitFileStatus = {}));
     const files = [];
     try {
-        const result = yield child_process_1.execSync(`git show --pretty="" --name-status ${commitSha}`).toString('utf-8');
+        const result = yield child_process_1.execSync(`git --no-pager diff HEAD~1 --name-status ${commitSha}`).toString('utf-8');
         result.split('\n').forEach((element) => {
             const fileStatus = element.split('\t')[0];
             const fileName = element.split('\t')[1];
