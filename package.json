@@ -2,7 +2,7 @@
     "name": "git-changesets",
     "version": "0.0.2",
     "description": "Github Action to determine changed files (aka changesets)",
-    "main": "lib/main.js",
+    "main": "lib/index.js",
     "scripts": {
         "test": "yarn concurrently npm:test:lint npm:test:unit",
         "test:unit": "yarn jest",
@@ -32,7 +32,7 @@
         "@zeit/ncc": "^0.22.3",
         "commitizen": "^4.2.3",
         "commitlint": "^8.2.0",
-        "concurrently": "^6.0.2",
+        "concurrently": "^7.1.0",
         "eslint": "^7.25.0",
         "eslint-config-airbnb-base": "^14.2.1",
         "eslint-config-prettier": "^8.3.0",
