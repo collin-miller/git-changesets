@@ -5,7 +5,7 @@ import * as core from '@actions/core';
 import nock from 'nock';
 
 import cp from 'child_process';
-import run from './index';
+import run from './main';
 
 const originalGitHubWorkspace = process.env.GITHUB_WORKSPACE;
 

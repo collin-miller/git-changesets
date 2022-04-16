@@ -40,7 +40,7 @@ require('./sourcemap-register.js');module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(198);
+/******/ 		return __webpack_require__(526);
 /******/ 	};
 /******/
 /******/ 	// run startup
@@ -602,12 +602,210 @@ exports.debug = debug; // for test
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const index_1 = __importDefault(__webpack_require__(526));
-index_1.default();
+const core = __importStar(__webpack_require__(470));
+const github_1 = __webpack_require__(469);
+const child_process_1 = __webpack_require__(129);
+var OutputFormat;
+(function (OutputFormat) {
+    OutputFormat["SpaceDelimited"] = "space-delimited";
+    OutputFormat["Csv"] = "csv";
+    OutputFormat["Json"] = "json";
+})(OutputFormat || (OutputFormat = {}));
+var FileStatus;
+(function (FileStatus) {
+    FileStatus["Added"] = "added";
+    FileStatus["Modified"] = "modified";
+    FileStatus["Removed"] = "removed";
+    FileStatus["Renamed"] = "renamed";
+})(FileStatus || (FileStatus = {}));
+const setFormat = (elements, outputFormat) => {
+    if (outputFormat === OutputFormat.SpaceDelimited) {
+        return elements.join(' ');
+    }
+    if (outputFormat === OutputFormat.Csv) {
+        return elements.join(',');
+    }
+    return JSON.stringify(elements);
+};
+const setOutput = (added, modified, removed, renamed, outputFormat) => {
+    const allFormatted = setFormat([...added, ...modified, ...removed, ...renamed], outputFormat);
+    const addedFormatted = setFormat(added, outputFormat);
+    const modifiedFormatted = setFormat(modified, outputFormat);
+    const removedFormatted = setFormat(removed, outputFormat);
+    const renamedFormatted = setFormat(renamed, outputFormat);
+    const addedModifiedFormatted = setFormat([...added, ...modified], outputFormat);
+    // Log the output values.
+    core.info(`All: ${allFormatted}`);
+    core.info(`Added: ${addedFormatted}`);
+    core.info(`Modified: ${modifiedFormatted}`);
+    core.info(`Removed: ${removedFormatted}`);
+    core.info(`Renamed: ${renamedFormatted}`);
+    core.info(`Added or modified: ${addedModifiedFormatted}`);
+    // Set step output context.
+    core.setOutput('all', allFormatted);
+    core.setOutput('added', addedFormatted);
+    core.setOutput('modified', modifiedFormatted);
+    core.setOutput('removed', removedFormatted);
+    core.setOutput('renamed', renamedFormatted);
+    core.setOutput('added_modified', addedModifiedFormatted);
+};
+const parseCommit = (commitSha) => __awaiter(void 0, void 0, void 0, function* () {
+    let GitFileStatus;
+    (function (GitFileStatus) {
+        GitFileStatus["Added"] = "A";
+        GitFileStatus["Modified"] = "M";
+        GitFileStatus["Deleted"] = "D";
+        GitFileStatus["Renamed"] = "R";
+    })(GitFileStatus || (GitFileStatus = {}));
+    const files = [];
+    try {
+        const result = yield child_process_1.execSync(`git --no-pager diff HEAD~1 --name-status ${commitSha}`).toString('utf-8');
+        result.split('\n').forEach((element) => {
+            const fileStatus = element.split('\t')[0];
+            const fileName = element.split('\t')[1];
+            if (fileStatus && fileName) {
+                const data = {};
+                data.filename = fileName;
+                if (fileStatus === GitFileStatus.Added) {
+                    data.status = FileStatus.Added;
+                }
+                else if (fileStatus === GitFileStatus.Modified) {
+                    data.status = FileStatus.Modified;
+                }
+                else if (fileStatus === GitFileStatus.Deleted) {
+                    data.status = FileStatus.Removed;
+                }
+                else if (fileStatus.startsWith(GitFileStatus.Renamed)) {
+                    data.status = FileStatus.Renamed;
+                }
+                files.push(data);
+            }
+        });
+    }
+    catch (err) {
+        core.setFailed(`Exception raised while parsing commit ${commitSha}, message ${err.message}`);
+    }
+    return { status: 200, data: { files } };
+});
+const run = () => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
+    try {
+        // Create GitHub client with the API token.
+        const format = core.getInput('format', {
+            required: true,
+        });
+        // Ensure that the format parameter is set properly.
+        if (!Object.values(OutputFormat).includes(format)) {
+            core.setFailed(`Output format must be one of must be one of ${Object.values(OutputFormat).join(', ')}, got '${format}'.`);
+        }
+        // Debug log the payload.
+        core.debug(`Payload keys: ${Object.keys(github_1.context.payload)}`);
+        const client = github_1.getOctokit(core.getInput('token', { required: true }));
+        // Get event name.
+        const { eventName } = github_1.context;
+        // Define the base and head commits to be extracted from the payload.
+        let base;
+        let head;
+        if (eventName === 'pull_request') {
+            base = (_b = (_a = github_1.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.base) === null || _b === void 0 ? void 0 : _b.ref;
+            head = (_d = (_c = github_1.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head) === null || _d === void 0 ? void 0 : _d.sha;
+        }
+        else if (eventName === 'push') {
+            base = github_1.context.payload.before;
+            head = github_1.context.payload.after;
+        }
+        else {
+            base = '';
+            head = '';
+            core.setFailed(`Pull requests and pushes are the only supported event types. Event type: ${github_1.context.eventName}`);
+        }
+        // Log the commits
+        core.info(`Base commit: ${base}`);
+        core.info(`Head commit: ${head}`);
+        let response;
+        // Ensure that the base and head properties are set on the payload.
+        if (!base || !head) {
+            core.setFailed(`The base and head commits are missing from the payload for this ${github_1.context.eventName} event.`);
+        }
+        else if (base === '0000000000000000000000000000000000000000') {
+            response = yield parseCommit(head);
+        }
+        else {
+            // https://developer.github.com/v3/repos/commits/#compare-two-commits
+            response = yield client.repos.compareCommits({
+                base,
+                head,
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+            });
+        }
+        // Ensure that the request was successful.
+        if ((response === null || response === void 0 ? void 0 : response.status) !== 200) {
+            core.setFailed(`The GitHub API for comparing the base and head commits for this ${github_1.context.eventName} event returned ${response === null || response === void 0 ? void 0 : response.status}, expected 200.`);
+        }
+        const files = response === null || response === void 0 ? void 0 : response.data.files;
+        const added = [];
+        const modified = [];
+        const removed = [];
+        const renamed = [];
+        files === null || files === void 0 ? void 0 : files.forEach((element) => {
+            if (element.status === FileStatus.Added) {
+                added.push(element.filename);
+            }
+            else if (element.status === FileStatus.Modified) {
+                modified.push(element.filename);
+            }
+            else if (element.status === FileStatus.Removed) {
+                removed.push(element.filename);
+            }
+            else if (element.status === FileStatus.Renamed) {
+                renamed.push(element.filename);
+            }
+            else {
+                core.setFailed(`Invalid File Status '${element.status}', expected 'added', 'modified', 'removed', or 'renamed'. File causing violation ${element.filename}`);
+            }
+            // If we're using the 'space-delimited' format and any of the filenames have a space in them,
+            // then fail the step.
+            if (format === OutputFormat.SpaceDelimited && element.filename.includes(' ')) {
+                core.setFailed(`Filenames cannot contain a space when using the 'space-delimited' option. Filename causing the violation '${element.filename}'`);
+            }
+        });
+        setOutput(added, modified, removed, renamed, format);
+    }
+    catch (error) {
+        core.setFailed(error.message);
+    }
+});
+exports.default = run;
 
 
 /***/ }),
@@ -3736,210 +3934,12 @@ module.exports.Collection = Hook.Collection
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(470));
-const github_1 = __webpack_require__(469);
-const child_process_1 = __webpack_require__(129);
-var OutputFormat;
-(function (OutputFormat) {
-    OutputFormat["SpaceDelimited"] = "space-delimited";
-    OutputFormat["Csv"] = "csv";
-    OutputFormat["Json"] = "json";
-})(OutputFormat || (OutputFormat = {}));
-var FileStatus;
-(function (FileStatus) {
-    FileStatus["Added"] = "added";
-    FileStatus["Modified"] = "modified";
-    FileStatus["Removed"] = "removed";
-    FileStatus["Renamed"] = "renamed";
-})(FileStatus || (FileStatus = {}));
-const setFormat = (elements, outputFormat) => {
-    if (outputFormat === OutputFormat.SpaceDelimited) {
-        return elements.join(' ');
-    }
-    if (outputFormat === OutputFormat.Csv) {
-        return elements.join(',');
-    }
-    return JSON.stringify(elements);
-};
-const setOutput = (added, modified, removed, renamed, outputFormat) => {
-    const allFormatted = setFormat([...added, ...modified, ...removed, ...renamed], outputFormat);
-    const addedFormatted = setFormat(added, outputFormat);
-    const modifiedFormatted = setFormat(modified, outputFormat);
-    const removedFormatted = setFormat(removed, outputFormat);
-    const renamedFormatted = setFormat(renamed, outputFormat);
-    const addedModifiedFormatted = setFormat([...added, ...modified], outputFormat);
-    // Log the output values.
-    core.info(`All: ${allFormatted}`);
-    core.info(`Added: ${addedFormatted}`);
-    core.info(`Modified: ${modifiedFormatted}`);
-    core.info(`Removed: ${removedFormatted}`);
-    core.info(`Renamed: ${renamedFormatted}`);
-    core.info(`Added or modified: ${addedModifiedFormatted}`);
-    // Set step output context.
-    core.setOutput('all', allFormatted);
-    core.setOutput('added', addedFormatted);
-    core.setOutput('modified', modifiedFormatted);
-    core.setOutput('removed', removedFormatted);
-    core.setOutput('renamed', renamedFormatted);
-    core.setOutput('added_modified', addedModifiedFormatted);
-};
-const parseCommit = (commitSha) => __awaiter(void 0, void 0, void 0, function* () {
-    let GitFileStatus;
-    (function (GitFileStatus) {
-        GitFileStatus["Added"] = "A";
-        GitFileStatus["Modified"] = "M";
-        GitFileStatus["Deleted"] = "D";
-        GitFileStatus["Renamed"] = "R";
-    })(GitFileStatus || (GitFileStatus = {}));
-    const files = [];
-    try {
-        const result = yield child_process_1.execSync(`git --no-pager diff HEAD~1 --name-status ${commitSha}`).toString('utf-8');
-        result.split('\n').forEach((element) => {
-            const fileStatus = element.split('\t')[0];
-            const fileName = element.split('\t')[1];
-            if (fileStatus && fileName) {
-                const data = {};
-                data.filename = fileName;
-                if (fileStatus === GitFileStatus.Added) {
-                    data.status = FileStatus.Added;
-                }
-                else if (fileStatus === GitFileStatus.Modified) {
-                    data.status = FileStatus.Modified;
-                }
-                else if (fileStatus === GitFileStatus.Deleted) {
-                    data.status = FileStatus.Removed;
-                }
-                else if (fileStatus.startsWith(GitFileStatus.Renamed)) {
-                    data.status = FileStatus.Renamed;
-                }
-                files.push(data);
-            }
-        });
-    }
-    catch (err) {
-        core.setFailed(`Exception raised while parsing commit ${commitSha}, message ${err.message}`);
-    }
-    return { status: 200, data: { files } };
-});
-const run = () => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
-    try {
-        // Create GitHub client with the API token.
-        const format = core.getInput('format', {
-            required: true,
-        });
-        // Ensure that the format parameter is set properly.
-        if (!Object.values(OutputFormat).includes(format)) {
-            core.setFailed(`Output format must be one of must be one of ${Object.values(OutputFormat).join(', ')}, got '${format}'.`);
-        }
-        // Debug log the payload.
-        core.debug(`Payload keys: ${Object.keys(github_1.context.payload)}`);
-        const client = github_1.getOctokit(core.getInput('token', { required: true }));
-        // Get event name.
-        const { eventName } = github_1.context;
-        // Define the base and head commits to be extracted from the payload.
-        let base;
-        let head;
-        if (eventName === 'pull_request') {
-            base = (_b = (_a = github_1.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.base) === null || _b === void 0 ? void 0 : _b.ref;
-            head = (_d = (_c = github_1.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head) === null || _d === void 0 ? void 0 : _d.sha;
-        }
-        else if (eventName === 'push') {
-            base = github_1.context.payload.before;
-            head = github_1.context.payload.after;
-        }
-        else {
-            base = '';
-            head = '';
-            core.setFailed(`Pull requests and pushes are the only supported event types. Event type: ${github_1.context.eventName}`);
-        }
-        // Log the commits
-        core.info(`Base commit: ${base}`);
-        core.info(`Head commit: ${head}`);
-        let response;
-        // Ensure that the base and head properties are set on the payload.
-        if (!base || !head) {
-            core.setFailed(`The base and head commits are missing from the payload for this ${github_1.context.eventName} event.`);
-        }
-        else if (base === '0000000000000000000000000000000000000000') {
-            response = yield parseCommit(head);
-        }
-        else {
-            // https://developer.github.com/v3/repos/commits/#compare-two-commits
-            response = yield client.repos.compareCommits({
-                base,
-                head,
-                owner: github_1.context.repo.owner,
-                repo: github_1.context.repo.repo,
-            });
-        }
-        // Ensure that the request was successful.
-        if ((response === null || response === void 0 ? void 0 : response.status) !== 200) {
-            core.setFailed(`The GitHub API for comparing the base and head commits for this ${github_1.context.eventName} event returned ${response === null || response === void 0 ? void 0 : response.status}, expected 200.`);
-        }
-        const files = response === null || response === void 0 ? void 0 : response.data.files;
-        const added = [];
-        const modified = [];
-        const removed = [];
-        const renamed = [];
-        files === null || files === void 0 ? void 0 : files.forEach((element) => {
-            if (element.status === FileStatus.Added) {
-                added.push(element.filename);
-            }
-            else if (element.status === FileStatus.Modified) {
-                modified.push(element.filename);
-            }
-            else if (element.status === FileStatus.Removed) {
-                removed.push(element.filename);
-            }
-            else if (element.status === FileStatus.Renamed) {
-                renamed.push(element.filename);
-            }
-            else {
-                core.setFailed(`Invalid File Status '${element.status}', expected 'added', 'modified', 'removed', or 'renamed'. File causing violation ${element.filename}`);
-            }
-            // If we're using the 'space-delimited' format and any of the filenames have a space in them,
-            // then fail the step.
-            if (format === OutputFormat.SpaceDelimited && element.filename.includes(' ')) {
-                core.setFailed(`Filenames cannot contain a space when using the 'space-delimited' option. Filename causing the violation '${element.filename}'`);
-            }
-        });
-        setOutput(added, modified, removed, renamed, format);
-    }
-    catch (error) {
-        core.setFailed(error.message);
-    }
-});
-exports.default = run;
+const main_1 = __importDefault(__webpack_require__(198));
+main_1.default();
 
 
 /***/ }),
