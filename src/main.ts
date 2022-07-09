@@ -21,7 +21,10 @@ interface IGithubResponseFiles {
 }
 interface IGithubResponse {
     status: number;
-    data: { status: string; files: IGithubResponseFiles[] };
+    data: {
+        status: string;
+        files: IGithubResponseFiles[];
+    };
 }
 
 const setFormat = (elements: string[], outputFormat: OutputFormat) => {
