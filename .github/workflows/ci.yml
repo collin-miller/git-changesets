@@ -33,14 +33,19 @@ jobs:
             - name: Test
               run: yarn test
 
-    RunAction:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
+            - name: Verify Package
+              run: |
+                  # If there are modifications to the files in `dist/` after the buid step the latest build wasn't pushed
+                  if  git --no-pager diff --name-only | grep '^dist/' || git ls-files --other --exclude-standard | grep '^dist/'; then
+                      echo "The build action code doesn't match what should have been built."
+                      echo "Rebuild the action by running 'yarn build', commit the changes, and push again."
+                      git --no-pager diff --name-only | grep '^dist/'
+                      git ls-files --other --exclude-standard | grep '^dist/'
+                      exit 1
+                  fi
 
             - id: files
-              name: Run the action
+              name: Run the Action Package
               uses: ./
 
             - name: Print steps context output
