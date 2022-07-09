@@ -4,6 +4,9 @@ on:
     pull_request:
         branches:
             - master
+defaults:
+    run:
+        shell: bash
 
 jobs:
     Build:
@@ -44,15 +47,28 @@ jobs:
                       exit 1
                   fi
 
-            - id: files
-              name: Run the Action Package
+            - name: Run the Action Package
+              id: local_action_changesets
               uses: ./
+
+            - name: Run the Released Package
+              id: v1_changed_changesets
+              uses: collin-miller/git-changesets@v1
 
             - name: Print steps context output
               run: |
-                  echo 'steps.files.outputs.all=${{ steps.files.outputs.all }}'
-                  echo 'steps.files.outputs.added=${{ steps.files.outputs.added }}'
-                  echo 'steps.files.outputs.modified=${{ steps.files.outputs.modified }}'
-                  echo 'steps.files.outputs.removed=${{ steps.files.outputs.removed }}'
-                  echo 'steps.files.outputs.renamed=${{ steps.files.outputs.renamed }}'
-                  echo 'steps.files.outputs.added_modified=${{ steps.files.outputs.added_modified }}'
+                  echo 'steps.local_action_changesets.outputs.all=${{ steps.local_action_changesets.outputs.all }}'
+                  echo 'steps.local_action_changesets.outputs.added=${{ steps.local_action_changesets.outputs.added }}'
+                  echo 'steps.local_action_changesets.outputs.modified=${{ steps.local_action_changesets.outputs.modified }}'
+                  echo 'steps.local_action_changesets.outputs.removed=${{ steps.local_action_changesets.outputs.removed }}'
+                  echo 'steps.local_action_changesets.outputs.renamed=${{ steps.local_action_changesets.outputs.renamed }}'
+                  echo 'steps.local_action_changesets.outputs.added_modified=${{ steps.local_action_changesets.outputs.added_modified }}'
+
+            - name: Test Changed Files
+              run: |
+                  [ ${{ steps.local_action_changesets.outputs.all }} == ${{ steps.v1_changed_changesets.outputs.all }} ] && echo "All Passed" || (echo "All Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.added }} == ${{ steps.v1_changed_changesets.outputs.added }} ] && echo "Added Passed" || (echo "Added Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.modified }} == ${{ steps.v1_changed_changesets.outputs.modified }} ] && echo "Modified Passed" || (echo "Modified Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.removed }} == ${{ steps.v1_changed_changesets.outputs.removed }} ] && echo "Removed Passed" || (echo "Removed Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.renamed }} == ${{ steps.v1_changed_changesets.outputs.renamed }} ] && echo "Renamed Passed" || (echo "Renamed Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.added_modified }} == ${{ steps.v1_changed_changesets.outputs.added_modified }} ] && echo "Added/Modified Passed" || (echo "Added/Modified Failed" && exit 1)
