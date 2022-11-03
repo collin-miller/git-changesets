@@ -96,7 +96,8 @@ const parseCommit = async (commitSha: string): Promise<IGithubResponse> => {
                 files.push(data as IGithubResponseFiles);
             }
         });
-    } catch (err) {
+    } catch (error) {
+        const err: Error = error as Error;
         core.setFailed(`Exception raised while parsing commit ${commitSha}, message ${err.message}`);
     }
     return { status: 200, data: { files } } as IGithubResponse;
@@ -156,7 +157,7 @@ const run = async (): Promise<void> => {
             response = await parseCommit(head);
         } else {
             // https://developer.github.com/v3/repos/commits/#compare-two-commits
-            response = await client.repos.compareCommits({
+            response = await client.rest.repos.compareCommits({
                 base,
                 head,
                 owner: context.repo.owner,
@@ -201,7 +202,8 @@ const run = async (): Promise<void> => {
         });
         setOutput(added, modified, removed, renamed, format);
     } catch (error) {
-        core.setFailed(error.message);
+        const err: Error = error as Error;
+        core.setFailed(err.message);
     }
 };
 

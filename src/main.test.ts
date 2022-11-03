@@ -185,7 +185,7 @@ describe('git-changesets', () => {
             expect(core.getInput).toHaveBeenCalledTimes(2);
             expect(core.error).toHaveBeenCalledTimes(0);
             expect(core.setFailed).toHaveBeenCalledTimes(1);
-            expect(core.setFailed).toHaveBeenCalledWith('{"status":500}');
+            expect(core.setFailed).toHaveBeenCalledWith('Unknown error: {"status":500}');
         });
     });
     describe('push events', () => {
