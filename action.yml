@@ -2,7 +2,7 @@ name: 'git-changesets'
 description: 'Github Action to determine changed files (aka changesets)'
 author: 'Collin Miller'
 runs:
-    using: node16
+    using: node20
     main: dist/index.js
 inputs:
     token:
