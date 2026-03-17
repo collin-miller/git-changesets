@@ -13,19 +13,19 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
-              uses: actions/checkout@v3
+              uses: actions/checkout@v6
               with:
                   fetch-depth: 0
 
             - name: Commitlint
-              uses: wagoid/commitlint-github-action@v4
+              uses: wagoid/commitlint-github-action@v6
               with:
                   failOnWarnings: true
 
             - name: Setup node
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v6
               with:
-                  node-version: '16'
+                  node-version: '24'
 
             - name: Install Dependencies
               run: yarn
@@ -38,13 +38,20 @@ jobs:
 
             - name: Verify Package
               run: |
-                  # If there are modifications to the files in `dist/` after the buid step the latest build wasn't pushed
-                  if  git --no-pager diff --name-only | grep '^dist/' || git ls-files --other --exclude-standard | grep '^dist/'; then
-                      echo "The build action code doesn't match what should have been built."
-                      echo "Rebuild the action by running 'yarn build', commit the changes, and push again."
-                      git --no-pager diff --name-only | grep '^dist/'
-                      git ls-files --other --exclude-standard | grep '^dist/'
-                      exit 1
+                  # Check for modifications in the 'dist/' directory after the build step.
+                  # Step 1: Get the list of changed files.
+                  changed_files=$(git status --porcelain | awk '{print $2}')
+
+                  # Step 2: Filter for files in 'dist/'.
+                  dist_changes=$(echo "$changed_files" | grep '^dist/' 2>/dev/null || true)
+
+                  # Step 3: If there are changes, print a helpful message and fail the job.
+                  if [ -n "$dist_changes" ]; then
+                    echo "The build action code doesn't match what should have been built."
+                    echo "Rebuild the action by running 'yarn build', commit the changes, and push again."
+                    echo "Changed files in dist/:"
+                    echo "$dist_changes"
+                    exit 1
                   fi
 
             - name: Run the Action Package
