@@ -53,7 +53,7 @@ jobs:
 
             - name: Run the Released Package
               id: released
-              uses: collin-miller/git-changesets@v2
+              uses: collin-miller/git-changesets@v3
 
             - name: Print steps context output
               run: |
