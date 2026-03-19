@@ -13,17 +13,17 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
-              uses: actions/checkout@v3
+              uses: actions/checkout@v6
               with:
                   fetch-depth: 0
 
             - name: Commitlint
-              uses: wagoid/commitlint-github-action@v4
+              uses: wagoid/commitlint-github-action@v6
               with:
                   failOnWarnings: true
 
             - name: Setup node
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v6
               with:
                   node-version: '24'
 
@@ -52,8 +52,8 @@ jobs:
               uses: ./
 
             - name: Run the Released Package
-              id: v1_changed_changesets
-              uses: collin-miller/git-changesets@v1
+              id: released
+              uses: collin-miller/git-changesets@v2
 
             - name: Print steps context output
               run: |
@@ -66,9 +66,9 @@ jobs:
 
             - name: Test Changed Files
               run: |
-                  [ ${{ steps.local_action_changesets.outputs.all }} == ${{ steps.v1_changed_changesets.outputs.all }} ] && echo "All Passed" || (echo "All Failed" && exit 1)
-                  [ ${{ steps.local_action_changesets.outputs.added }} == ${{ steps.v1_changed_changesets.outputs.added }} ] && echo "Added Passed" || (echo "Added Failed" && exit 1)
-                  [ ${{ steps.local_action_changesets.outputs.modified }} == ${{ steps.v1_changed_changesets.outputs.modified }} ] && echo "Modified Passed" || (echo "Modified Failed" && exit 1)
-                  [ ${{ steps.local_action_changesets.outputs.removed }} == ${{ steps.v1_changed_changesets.outputs.removed }} ] && echo "Removed Passed" || (echo "Removed Failed" && exit 1)
-                  [ ${{ steps.local_action_changesets.outputs.renamed }} == ${{ steps.v1_changed_changesets.outputs.renamed }} ] && echo "Renamed Passed" || (echo "Renamed Failed" && exit 1)
-                  [ ${{ steps.local_action_changesets.outputs.added_modified }} == ${{ steps.v1_changed_changesets.outputs.added_modified }} ] && echo "Added/Modified Passed" || (echo "Added/Modified Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.all }} == ${{ steps.released.outputs.all }} ] && echo "All Passed" || (echo "All Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.added }} == ${{ steps.released.outputs.added }} ] && echo "Added Passed" || (echo "Added Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.modified }} == ${{ steps.released.outputs.modified }} ] && echo "Modified Passed" || (echo "Modified Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.removed }} == ${{ steps.released.outputs.removed }} ] && echo "Removed Passed" || (echo "Removed Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.renamed }} == ${{ steps.released.outputs.renamed }} ] && echo "Renamed Passed" || (echo "Renamed Failed" && exit 1)
+                  [ ${{ steps.local_action_changesets.outputs.added_modified }} == ${{ steps.released.outputs.added_modified }} ] && echo "Added/Modified Passed" || (echo "Added/Modified Failed" && exit 1)
