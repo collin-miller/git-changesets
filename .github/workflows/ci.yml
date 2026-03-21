@@ -26,6 +26,7 @@ jobs:
               uses: actions/setup-node@v6
               with:
                   node-version: '24'
+                  packageManager: 'yarn@latest'
 
             - name: Install Dependencies
               run: yarn
