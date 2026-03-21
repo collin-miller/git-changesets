@@ -26,7 +26,7 @@ jobs:
         steps:
             - id: changed_files
               name: git-changesets
-              uses: collin-miller/git-changesets@v0.0.2
+              uses: collin-miller/git-changesets@v3
               with:
                   # Default format is 'csv'. Other valid options are 'space-delimited' and 'json'.
                   format: csv
