@@ -111,3 +111,6 @@ lib
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# VS Code settings
+.vscode/*
