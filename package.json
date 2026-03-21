@@ -2,7 +2,7 @@
     "name": "git-changesets",
     "version": "0.0.2",
     "description": "Github Action to determine changed files (aka changesets)",
-    "main": "lib/index.js",
+    "main": "lib/run.js",
     "scripts": {
         "test": "yarn concurrently npm:test:lint npm:test:unit",
         "test:unit": "yarn jest",
